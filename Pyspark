@@ -1,0 +1,53 @@
+//To see the type of the RDD
+>>>type(theRDD)
+
+//To see the help 
+>>>help(theRDD)
+
+//SparkUI
+//Open the firefox browser in the sandbox and provide the following url
+//Default Spark UI port 4040
+http://localhost:4040
+
+//Count of order_status
+
+orderRDD = sc.textFile("/user/cloudera/working/retail_db/orders/part-00000")
+orderStatus = orderRDD.map(lambda rec : (int(rec.split(",")[0]),rec.split(",")[3]))
+orderMap = orderStatus.map(lambda rec : ((rec[1],1)))
+orderStatusCount = orderMap.reduceByKey(lambda rec1,rec2 : rec1+rec2)
+orderStatusCount.take(10)
+orderStatusCount.saveAsTextFile("/user/cloudera/working/orderStatus")
+hadoop fs -cat /user/cloudera/working/orderCount/part-00001
+
+
+//Max revenue by customer per day
+
+//Read the order file from HDFS
+order = sc.textFile("/user/cloudera/working/retail_db/orders/part-00000")
+
+//Read the order_items file from HDFS
+orderItems = sc.textFile("/user/cloudera/working/retail_db/order_items/part-00000")
+
+//Create the tuple with key as order_id and other dataset as the values
+orderMap = order.map(lambda x : (x.split(",")[0],x))
+
+//Create the tuple with key as order_id and other dataset as the values
+orderItemsMap = orderItems.map(lambda x : (x.split(",")[1],x))
+
+//Join the orderitems with orders
+orderJoinOrderItems = orderItemsMap.join(orderMap)
+
+//Just keeping the customer Id with the subtotal
+orderCustomer = orderJoinOrderItems.map(lambda x : (int(x[1][1].split(",")[2]),float(x[1][0].split(",")[4])))
+
+//Aggregate the key with value [for each customer id (key) the subtotal will be sum'ed (value)]
+customerTotal = orderCustomer.reduceByKey(lambda x,y : (x+y))
+
+//Print the value in the screen
+for i in customerTotal.sortByKey().take(10): print i
+
+//Store the result RDD in HDFS
+orderStatusCount.saveAsTextFile("/user/cloudera/working/retail_db/output/customer-revenue")
+
+//Just cross check the value
+hadoop fs -cat /user/cloudera/working/retail_db/output/customer-revenue/part-*")
