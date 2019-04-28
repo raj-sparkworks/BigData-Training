@@ -5,6 +5,7 @@ Types of Cluster Managers in Spark
 What is RDD
 List few different types of RDD
 Diff bt Narrow transformation and wide transformation
+Diff bt RDD, Dataframe & Dataset
 Diff between coalesce () and repartition () 
 Diff between actions and transformations ? list few actions and transformations
 What is DAG
