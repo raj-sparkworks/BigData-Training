@@ -1,0 +1,27 @@
+Explain Spark and its Architecture ?
+What is the use of SparkConext and SparkConfig and its parameters
+Define functions of SparkCore
+Types of Cluster Managers in Spark
+What is RDD
+List few different types of RDD
+Diff bt Narrow transformation and wide transformation
+Diff between coalesce () and repartition () 
+Diff between actions and transformations ? list few actions and transformations
+What is DAG
+What is Lazy loading
+What are Accumulators and Broadcast variables
+groupByKey vs reduceByKey which one cost performance
+How Spark connects to Hive
+What is metastore
+Explain HCatlog and its Architecture
+Map vs MapPartitions
+storage levels of Spark
+what is Serializers and type of custom Serializers
+What are Profilers
+How do you do incremental load in Spark
+What is the function of namenode?
+how to modify block size and replication factor at file level?
+how Spark Streaming processes data
+what are DStreams
+List few DStreams transformations
+What is the use of Sliding Window operation
