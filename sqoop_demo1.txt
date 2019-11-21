@@ -1,0 +1,196 @@
+sqoop list-databases \
+  --connect "jdbc:mysql://quickstart.cloudera:3306" \
+  --username retail_dba \
+  --password cloudera
+
+sqoop list-tables \ 
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username retail_dba \
+  --password cloudera
+
+sqoop eval \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username retail_dba \
+  --password cloudera \
+  --query "select count(1) from order_items"
+
+-- Reference: http://www.cloudera.com/content/cloudera/en/developers/home/developer-admin-resources/get-started-with-hadoop-tutorial/exercise-1.html
+sqoop import-all-tables \
+  -m 12 \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --as-avrodatafile \
+  --warehouse-dir=/user/hive/warehouse/retail_stage.db
+
+--Default
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --as-textfile \
+  --target-dir=/user/cloudera/departments
+
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --as-sequencefile \
+  --target-dir=/user/cloudera/departments
+
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --as-avrodatafile \
+  --target-dir=/user/cloudera/departments
+
+  --Create hive table example
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --hive-home /user/hive/warehouse \
+  --hive-import \
+  --hive-table departments_test \
+  --create-hive-table \
+  --outdir java_files
+
+sqoop import-all-tables \
+  --num-mappers 1 \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --hive-import \
+  --hive-overwrite \
+  --create-hive-table \
+  --compress \
+  --compression-codec org.apache.hadoop.io.compress.SnappyCodec \
+  --outdir java_files
+
+
+-- Basic import
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --target-dir /user/cloudera/departments 
+
+-- Boundary Query and columns
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --target-dir /user/cloudera/departments \
+  -m 2 \
+  --boundary-query "select 2, 8 from departments limit 1" \
+  --columns department_id,department_name
+
+-- query and split-by
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --query="select * from orders join order_items on orders.order_id = order_items.order_item_order_id where \$CONDITIONS" \
+  --target-dir /user/cloudera/order_join \
+  --split-by order_id \
+  --num-mappers 4
+
+
+-- Incremental load
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --target-dir /user/hive/warehouse/retail_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --check-column "department_id" \
+  --incremental append \
+  --last-value 7 \
+  --outdir java_files
+
+sqoop job --create sqoop_job \
+  -- import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --target-dir /user/hive/warehouse/retail_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --check-column "department_id" \
+  --incremental append \
+  --last-value 7 \
+  --outdir java_files
+
+sqoop job --list
+
+sqoop job --show sqoop_job
+
+sqoop job --exec sqoop_job
+
+-- Hive related
+-- Overwrite existing data associated with hive table (hive-overwrite)
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --hive-home /user/hive/warehouse/retail_ods.db \
+  --hive-import \
+  --hive-overwrite \
+  --hive-table departments \
+  --outdir java_files
+
+--Create hive table example
+sqoop import \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username=retail_dba \
+  --password=cloudera \
+  --table departments \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --hive-home /user/hive/warehouse \
+  --hive-import \
+  --hive-table departments_test \
+  --create-hive-table \
+  --outdir java_files
+
+
+sqoop export --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username retail_dba \
+  --password cloudera \
+  --table departments \
+  --export-dir /user/cloudera/sqoop_import/departments_export \
+  --batch \
+  --outdir java_files \
+  -m 1 \
+  --update-key department_id \
+  --update-mode allowinsert
+
+sqoop export --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username retail_dba \
+  --password cloudera \
+  --table departments_test \
+  --export-dir /user/hive/warehouse/departments_test \
+  --input-fields-terminated-by '\001' \
+  --input-lines-terminated-by '\n' \
+  --num-mappers 2 \
+  --batch \
+  --outdir java_files \
+  --input-null-string nvl \
+  --input-null-non-string -1
